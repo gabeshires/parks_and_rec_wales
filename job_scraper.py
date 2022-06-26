@@ -22,7 +22,7 @@ class job_scraper:
         self.email_address = open("email.txt", "r").readline()
         self.email_password = open("password.txt", "r").readline()
         self.path_to_driver = open("path_to_driver.txt", "r").readline()
-        #df
+        self.simple_df = pd.DataFrame(columns=['location', 'jobs'])
         
     def scrape(self):
         driver = webdriver.Chrome(self.path_to_driver)        
@@ -38,14 +38,68 @@ class job_scraper:
             driver.get(urls[u][0])
             jobs = driver.find_elements_by_xpath(urls[u][1])
             jobs_list = [jobs[j].text.split('\n')[0] for j in range(len(jobs))]
-            region_df = pd.DataFrame(data=jobs_list, columns=['jobs'])
-            region_df['location'] = u
+            if len(jobs_list) > 0:
+                region_df = pd.DataFrame(data=jobs_list, columns=['jobs'])
+                region_df['location'] = u
+            else:
+                pass
             all_jobs.append(region_df)
-        jobs_df = pd.concat(all_jobs)
+        self.simple_df = pd.concat(all_jobs).reset_index(drop=True)
         driver.close()
-        return jobs_df
-        
-scr = job_scraper('teacher').scrape()
+        return self.simple_df
+    
+    def email_build(self):
+        if len(self.simple_df) > 0:
+            subject = "{} jobs available in {}".format(self.search_term, ', '.join(self.simple_dataframe['location'].unique()))
+            ## format table 
+    
+    def send(self):
+        str_io = io.StringIO()
+        self.simple_df.to_html(buf=str_io)
+        table_html = str_io.getvalue()
+
+        text = """\
+        <b>This text is bold</b>
+        """
+
+        html = """\
+        <html>
+            <body>
+                <p>{table_html}</p>
+            </body>
+        </html>
+        """.format(table_html=table_html)
+
+        msg = EmailMessage()
+        msg["Subject"] = "Subject: Your Title"
+        msg["From"] = email_address
+        msg["To"] = email_address
+
+        msg.set_content(text + html, subtype='html')
+
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(email_address, get_password())
+            server.sendmail(
+                email_address, email_address, msg.as_string()
+                )
+     
+    
+scraper = job_scraper('teacher')
+scrape_output = scraper.scrape()
+
+scraper.email_build()
+
+
+urls = {
+            'Cardiff': ["https://www.jobscardiffcouncil.co.uk/vacancies/?date=all&keywords={}&sort=recent&lang=en_GB",
+                        '//div[@class="cs-post-title"]'],
+            'VoG': ["https://www.valeofglamorgan.gov.uk/en/our_council/jobs/index.aspx?searchCriteria[0][key]=keywords&searchCriteria[0][values][]={}&searchCriteria[1][key]=JobAdlg&searchCriteria[1][values][]=UKEN&searchCriteria[2][key]=Resultsperpage&searchCriteria[2][values][]=48",
+                    '//div[@class="jlist-tile-wrapper"]']
+            }
+
+
 test = get_vog_jobs('teacher')
 test = [test[j].split('\n')[0] for j in range(len(test))]
 
@@ -170,12 +224,13 @@ def send_email(msg):
         
         
 str_io = io.StringIO()
-scr.to_html(buf=str_io)
+scrape_output.to_html(buf=str_io)
 table_html = str_io.getvalue()
 print(table_html)
 
 text = """\
-not: Your Title"""
+<b>This text is bold</b>
+"""
 
 html = """\
 <html>
@@ -187,22 +242,22 @@ html = """\
 
 email_address = get_email()
 
-message = MIMEMultipart("alternative")
-message["Subject"] = "Subject: Your Title"
-message["From"] = email_address
-message["To"] = email_address
 
-part1 = MIMEText(text, "plain")
-part2 = MIMEText(html, "html")
-message.attach(part1)
-message.attach(part2)
+msg = EmailMessage()
+msg["Subject"] = "Subject: Your Title"
+msg["From"] = email_address
+msg["To"] = email_address
+text = """\
+<b>This text is bold</b>
+"""
+msg.set_content(text + html, subtype='html')
 
 
 context = ssl.create_default_context()
 with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
     server.login(email_address, get_password())
     server.sendmail(
-        email_address, email_address, message.as_string()
+        email_address, email_address, msg.as_string()
     )
 
         
