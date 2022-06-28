@@ -2,3 +2,4 @@ email.txt
 password.txt
 path_to_driver.txt
 .DS_Store
+__pycache__/
