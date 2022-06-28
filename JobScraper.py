@@ -11,9 +11,6 @@ import smtplib, ssl
 from email.message import EmailMessage
 import pandas as pd 
 import io
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
 
 class job_scraper:
     
@@ -54,39 +51,40 @@ class job_scraper:
                 (self.search_term,', '.\
                  join(self.simple_df['location'].unique()))
             text = """\
-            <b>Your job alert has found {} openings<b>
+            <b>Your job alert has found {} openings</b>
             """.format(len(self.simple_df))
-            table = self.simple_df
+            table = self.simple_df.set_index('location')
         else:
-            pass
+            subject = "No {} jobs found this week".format(self.search_term)
+            text = "Your job alert has found no openings. Consider changing \
+                search term or decreasing frequency of alert"
+            table = ""
         return subject, text, table
              
     
     def send(self):
         subject, text, table = self.email_build()
-        str_io = io.StringIO()
-        table.to_html(buf=str_io)
-        table_html = str_io.getvalue()
-
-        #text = """\
-        #<b>This text is bold</b>
-        #"""
-        
-        html = """\
-        <html>
-            <body>
-                <p>{table_html}</p>
-            </body>
-        </html>
-        """.format(table_html=table_html)
-
         msg = EmailMessage()
         msg["Subject"] = subject
-        msg["From"] = email_address
-        msg["To"] = email_address
+        msg["From"] = self.email_address
+        msg["To"] = self.email_address
+        
+        if len(table) > 0:
+            str_io = io.StringIO()
+            table.to_html(buf=str_io)
+            table_html = str_io.getvalue()
 
-        msg.set_content(text + html, subtype='html')
-
+            html = """\
+            <html>
+                <body>
+                    <p>{table_html}</p>
+                </body>
+            </html>
+            """.format(table_html=table_html)
+       
+            msg.set_content(text + html, subtype='html')
+        else: 
+            msg.set_content(text, subtype='html')
 
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
@@ -95,44 +93,10 @@ class job_scraper:
                 self.email_address, self.email_address, msg.as_string()
                 )
      
-    
-scraper = job_scraper('teacher')
-scrape_output = scraper.scrape()
 
-scraper.send()
-
-subject, text, table = scraper.email_build()
-
-
-urls = {
-            'Cardiff': ["https://www.jobscardiffcouncil.co.uk/vacancies/?date=all&keywords={}&sort=recent&lang=en_GB",
-                        '//div[@class="cs-post-title"]'],
-            'VoG': ["https://www.valeofglamorgan.gov.uk/en/our_council/jobs/index.aspx?searchCriteria[0][key]=keywords&searchCriteria[0][values][]={}&searchCriteria[1][key]=JobAdlg&searchCriteria[1][values][]=UKEN&searchCriteria[2][key]=Resultsperpage&searchCriteria[2][values][]=48",
-                    '//div[@class="jlist-tile-wrapper"]']
-            }
-
-
-test = get_vog_jobs('teacher')
-test = [test[j].split('\n')[0] for j in range(len(test))]
-
-for i in scr['jobs'].tolist():
-    print(i.split('\n')[0])
-
-# open browser
-path_to_driver = open("path_to_driver.txt", "r").readline()
-driver = webdriver.Chrome(path_to_driver)
-
-# define search time used throughout and urls that are used to if any jobs are found
-search_term = 'analyst'
-cardiff_jobs = 'https://www.jobscardiffcouncil.co.uk/vacancies/?date=all&keywords=&sort=recent&lang=en_GB'
-vog_jobs = 'https://www.valeofglamorgan.gov.uk/en/our_council/jobs/index.aspx?searchCriteria[0][key]=JobAdlg&searchCriteria[0][values][]=UKEN&searchCriteria[1][key]=Resultsperpage&searchCriteria[1][values][]=48'
-
-
-print(open("email.txt", "r").readline())
+"""
 def get_cardiff_jobs(term):
-    """
-    get jobs that contain search term from cardiff council
-    """
+
     url = "https://www.jobscardiffcouncil.co.uk/vacancies/?date=all&keywords={}&sort=recent&lang=en_GB".format(term)
     driver.implicitly_wait(10)
     driver.get(url)
@@ -143,9 +107,7 @@ def get_cardiff_jobs(term):
     return jobs
 
 def cardiff_response(jobs):
-    """
-    generate response from job info
-    """
+
     job_list = [jobs[j].text for j in range(len(jobs))]
     
     if len(job_list) == 0:
@@ -157,9 +119,7 @@ def cardiff_response(jobs):
     return cardiff_response
 
 def get_vog_jobs(term):
-    """
-    get jobs that contain search term from vog council
-    """
+
     url = "https://www.valeofglamorgan.gov.uk/en/our_council/jobs/index.aspx?searchCriteria[0][key]=keywords&searchCriteria[0][values][]={}&searchCriteria[1][key]=JobAdlg&searchCriteria[1][values][]=UKEN&searchCriteria[2][key]=Resultsperpage&searchCriteria[2][values][]=48".format(term)
     driver.implicitly_wait(10)
 
@@ -170,9 +130,7 @@ def get_vog_jobs(term):
     return job_list
 
 def vog_response(jobs):
-    """
-    generate response from job info 
-    """
+
     job_names = [jobs[j].text.split('\n')[0] for j in range(len(jobs))]
     salaries = [jobs[j].text.split('\n')[4] for j in range(len(jobs))]
     if len(jobs) == 0:
@@ -184,9 +142,7 @@ def vog_response(jobs):
     return vog_response
 
 def responses(term=search_term):
-    """
-    calls above functions to generate responses
-    """
+
     cardiff = cardiff_response(get_cardiff_jobs(term))
     driver.implicitly_wait(20)
     wait = WebDriverWait(driver, 20)
@@ -198,17 +154,13 @@ def responses(term=search_term):
 driver.close()
 
 def get_email():
-    """
-    get email address from saved txt file
-    """
+
     email = open("email.txt", "r")
     email_address = email.readline()
     return email_address
 
 def get_password():
-    """
-    get password from saved txt file
-    """
+
     password = open("password.txt", "r")
     email_password = password.readline()
     return email_password
@@ -216,9 +168,7 @@ def get_password():
 email_address = get_email()
 
 def email_message(subject, body):
-    """
-    sets email message parameters
-    """
+
     msg = EmailMessage()
     msg['Subject'] = subject
     msg['From'] = email_address
@@ -240,17 +190,7 @@ scrape_output.to_html(buf=str_io)
 table_html = str_io.getvalue()
 print(table_html)
 
-text = """\
-<b>This text is bold</b>
-"""
 
-html = """\
-<html>
-  <body>
-    <p>{table_html}</p>
-  </body>
-</html>
-""".format(table_html=table_html)
 
 email_address = get_email()
 
@@ -259,9 +199,7 @@ msg = EmailMessage()
 msg["Subject"] = "Subject: Your Title"
 msg["From"] = email_address
 msg["To"] = email_address
-text = """\
-<b>This text is bold</b>
-"""
+
 msg.set_content(text + html, subtype='html')
 
 
@@ -272,7 +210,7 @@ with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
         email_address, email_address, msg.as_string()
     )
 
-        
+"""
 """
 ### if statement that sounds out information depending on what's been scraped 
 if type(cardiff) is str and type(vog) is str:
