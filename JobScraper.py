@@ -16,6 +16,7 @@ class job_scraper:
     
     def __init__(self, search_term):
         self.search_term = search_term
+        self.url_search = search_term.replace(' ', '%20')
         self.email_address = open("email.txt", "r").readline()
         self.email_password = open("password.txt", "r").readline()
         self.path_to_driver = open("path_to_driver.txt", "r").readline()
@@ -27,9 +28,9 @@ class job_scraper:
         """
         driver = webdriver.Chrome(self.path_to_driver)        
         urls = {
-            'Cardiff': ["https://www.jobscardiffcouncil.co.uk/vacancies/?date=all&keywords={}&sort=recent&lang=en_GB".format(self.search_term),
+            'Cardiff': ["https://www.jobscardiffcouncil.co.uk/vacancies/?date=all&keywords={}&sort=recent&lang=en_GB".format(self.url_search),
                         '//div[@class="cs-post-title"]'],
-            'VoG': ["https://www.valeofglamorgan.gov.uk/en/our_council/jobs/index.aspx?searchCriteria[0][key]=keywords&searchCriteria[0][values][]={}&searchCriteria[1][key]=JobAdlg&searchCriteria[1][values][]=UKEN&searchCriteria[2][key]=Resultsperpage&searchCriteria[2][values][]=48".format(self.search_term),
+            'VoG': ["https://www.valeofglamorgan.gov.uk/en/our_council/jobs/index.aspx?searchCriteria[0][key]=keywords&searchCriteria[0][values][]={}&searchCriteria[1][key]=JobAdlg&searchCriteria[1][values][]=UKEN&searchCriteria[2][key]=Resultsperpage&searchCriteria[2][values][]=48".format(self.url_search),
                     '//div[@class="jlist-tile-wrapper"]']
             }
         all_jobs = []
@@ -59,7 +60,7 @@ class job_scraper:
             text = """\
             <b>Your job alert has found {} openings</b>
             """.format(len(self.simple_df))
-            table = self.simple_df.set_index('location')
+            table = self.simple_df
         else:
             subject = "No {} jobs found this week".format(self.search_term)
             text = "Your job alert has found no openings. Consider changing \
