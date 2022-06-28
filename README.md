@@ -1,10 +1,6 @@
 # parks_and_rec_wales
-Simple scraper to get jobs from South Wales local governments. Currently to run it's a manual .py file with a search term specified at the start. I have a few things in mind to improve it. I've scheduled so it sends an email weekly to myself with job updates. To run this there needs to be an email and password txt file in same file as .py.
-- [ ] Changing it to a class so it can be imported and ran in seperate script
-- [ ] Adding in more South Wales local governments 
-- [ ] Generalising the output all sites can be seen in one place (csv or other)
-- [ ] Add in functionality to search through multiple pages
-
+## currently work in progress
+Web scraper to get jobs from South Wales local governments based off a user specified search term. The output csv can also be sent by email user the send() function. To run, this needs 3 txt files in folder, email.txt, password.txt and path_to_driver.txt. The path_to_driver.txt should contain a path a selenium webdriver. Example of how to use can be seen in main.py and below:
 
 ```python
 from JobScraper import job_scraper
@@ -15,3 +11,17 @@ scraper.scrape()
 
 scraper.send()
 ```
+I've set the main.py file to be ran weekly using crontab.
+
+
+I have a few things in mind to improve it:
+
+- [ ] add in ability to search for > 1 search term at the same time ('data scientist' insead of just 'data')
+- [ ] adding in more South Wales local governments 
+- [ ] adding in a second function scrape_detailed() that returns most information like salary and specific location
+- [ ] add in functionality to search through multiple pages if the search returns multiply pages
+- [ ] add in requirements.txt
+
+
+
+
