@@ -18,6 +18,6 @@ I have a few things in mind to improve it:
 
 - [ ] add in ability to search for > 1 search term at the same time ('data scientist' insead of just 'data')
 - [ ] adding in more South Wales local governments 
-- [ ] adding in a second function scrape_detailed() that returns most information like salary and specific location
+- [ ] adding in a second function scrape_detailed() that returns more information like salary and specific location
 - [ ] add in functionality to search through multiple pages if the search returns multiply pages
 - [ ] add in requirements.txt
