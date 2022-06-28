@@ -22,6 +22,9 @@ class job_scraper:
         self.simple_df = pd.DataFrame(columns=['location', 'jobs'])
         
     def scrape(self):
+        """
+        scrape jobs from local government websites and return as df
+        """
         driver = webdriver.Chrome(self.path_to_driver)        
         urls = {
             'Cardiff': ["https://www.jobscardiffcouncil.co.uk/vacancies/?date=all&keywords={}&sort=recent&lang=en_GB".format(self.search_term),
@@ -46,6 +49,9 @@ class job_scraper:
         return self.simple_df
     
     def email_build(self):
+        """
+        gets subject and body parameters for email message
+        """
         if len(self.simple_df) > 0:
             subject = "{} jobs available in {}".format\
                 (self.search_term,', '.\
@@ -63,6 +69,9 @@ class job_scraper:
              
     
     def send(self):
+        """
+        sets email parameters, formats message and sends 
+        """
         subject, text, table = self.email_build()
         msg = EmailMessage()
         msg["Subject"] = subject

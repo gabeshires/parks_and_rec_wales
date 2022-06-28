@@ -12,6 +12,3 @@ scraper.scrape()
 
 scraper.send()
 
-
-
-
