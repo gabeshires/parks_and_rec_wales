@@ -4,3 +4,14 @@ Simple scraper to get jobs from South Wales local governments. Currently to run 
 - [ ] Adding in more South Wales local governments 
 - [ ] Generalising the output all sites can be seen in one place (csv or other)
 - [ ] Add in functionality to search through multiple pages
+
+
+```
+from JobScraper import job_scraper
+
+scraper = job_scraper('Analyst')
+
+scraper.scrape()
+
+scraper.send()
+```
